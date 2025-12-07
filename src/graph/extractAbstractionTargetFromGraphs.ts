@@ -1,4 +1,4 @@
-import { Graph } from '@ysk8hori/typescript-graph/dist/src/models';
+import type { Graph } from '@ysk8hori/typescript-graph';
 
 /**
  * graph に含まれる抽象化されたノードのパスのリストを返す

@@ -1,0 +1,25 @@
+on: pull_request
+
+# Sets permissions of the GITHUB_TOKEN to allow write pull-requests
+permissions:
+  pull-requests: write
+
+jobs:
+  delta-typescript-graph-job:
+    runs-on: ubuntu-latest
+    name: Test dummy project
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - name: Delta Typescript Graph
+        id: tsg
+        uses: ./
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
+          tsconfig: './dummy_project/tsconfig-dummy.json'
+          max-size: 100
+          orientation: LR
+          debug: true
+          include-index-file-dependencies: true
+          comment-title: 'Dummy project dependency graph'
+          show-metrics: true

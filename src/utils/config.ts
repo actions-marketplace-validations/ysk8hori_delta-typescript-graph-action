@@ -1,9 +1,11 @@
-import { z } from 'zod';
-import type mermaidify from '@ysk8hori/typescript-graph/dist/src/mermaidify';
+import type { mermaidify } from '@ysk8hori/typescript-graph';
 import * as core from '@actions/core';
+import { uniqueString } from './reducer';
 
 /** tsconfig のルートディレクトリ */
 const TSCONFIG_ROOT = 'tsconfig-root';
+/** tsconfig のパス */
+const TSCONFIG_PATH = 'tsconfig';
 /** 変更ファイル数が多い場合にグラフの表示を抑止するが、その際のノード数を指定する値 */
 const MAX_SIZE = 'max-size';
 /** グラフの方向を指定する */
@@ -16,25 +18,10 @@ const IN_DETAILS = 'in-details';
 const EXCLUDE = 'exclude';
 /** 変更対象のファイルが同階層の index.ts などから参照されている場合、その index.ts への依存ファイルも表示するかどうか */
 const INCLUDE_INDEX_FILE_DEPENDENCIES = 'include-index-file-dependencies';
-
-const tsgConfigScheme = z.object({
-  /** tsconfig のルートディレクトリ */
-  tsconfigRoot: z.string().optional(),
-  /** 変更ファイル数が多い場合にグラフの表示を抑止するが、その際のノード数を指定する値 */
-  maxSize: z.number().optional(),
-  /** グラフの方向を指定する */
-  orientation: z.union([z.literal('TB'), z.literal('LR')]).optional(),
-  /** デバッグモード */
-  debug: z.boolean().optional(),
-  /** Mermaid を `<details>` タグで囲み折りたたむかどうか */
-  inDetails: z.boolean().optional(),
-  /** ファイルの除外対象 */
-  exclude: z.array(z.string()).optional(),
-  /** 変更対象のファイルが同階層の index.ts などから参照されている場合、その index.ts への依存ファイルも表示するかどうか */
-  includeIndexFileDependencies: z.boolean().optional(),
-});
-
-export type TsgConfigScheme = z.infer<typeof tsgConfigScheme>;
+/** コメントのタイトル */
+const COMMENT_TITLE = 'comment-title';
+/** メトリクスを表示するかどうか */
+const SHOW_METRICS = 'show-metrics';
 
 /**
  * tsconfig を探索するディレクトリ情報を取得する。
@@ -43,6 +30,13 @@ export type TsgConfigScheme = z.infer<typeof tsgConfigScheme>;
  */
 export function getTsconfigRoot(): string {
   return core.getInput(TSCONFIG_ROOT) ?? './';
+}
+
+/**
+ * tsconfig.json のパスを取得する。ファイル名が異なる場合などにはこちらを指定する。
+ */
+export function getTsconfigPath(): string | undefined {
+  return core.getInput(TSCONFIG_PATH) ?? undefined;
 }
 
 /** 変更ファイル数が多い場合にグラフの表示を抑止するが、その際のノード数を指定する値を取得する。 */
@@ -78,15 +72,43 @@ export function isInDetails(): boolean {
   return core.getInput(IN_DETAILS) === 'true';
 }
 
+export function getShowMetrics(): boolean {
+  return core.getInput(SHOW_METRICS) === 'true';
+}
+
 export function exclude(): string[] {
   return core
     .getInput(EXCLUDE)
     .split(',')
     .map(s => s.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .reduce(uniqueString, ['node_modules']); // デフォルトで node_modules を含める
 }
 
 /** 変更対象のファイルが同階層の index.ts などから参照されている場合、その index.ts への依存ファイルも表示するかどうか */
 export function isIncludeIndexFileDependencies(): boolean {
   return core.getInput(INCLUDE_INDEX_FILE_DEPENDENCIES) === 'true';
+}
+
+/** コメントのタイトルを取得する */
+export function getCommentTitle(): string {
+  return core.getInput(COMMENT_TITLE) ?? 'Delta TypeScript Graph';
+}
+
+export type Config = ReturnType<typeof getConfig>;
+
+export function getConfig() {
+  return {
+    tsconfigRoot: getTsconfigRoot(),
+    tsconfig: getTsconfigPath(),
+    maxSize: getMaxSize(),
+    orientation: getOrientation(),
+    debugEnabled: isDebugEnabled(),
+    inDetails: isInDetails(),
+    exclude: exclude(),
+    includeIndexFileDependencies: isIncludeIndexFileDependencies(),
+    /** Action の parameter として指定された comment-title */
+    commentTitle: getCommentTitle(),
+    showMetrics: getShowMetrics(),
+  };
 }

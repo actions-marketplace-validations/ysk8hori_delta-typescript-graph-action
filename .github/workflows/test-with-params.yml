@@ -10,16 +10,18 @@ jobs:
     name: Test with params
     steps:
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - name: Delta Typescript Graph
         id: tsg
-        uses: ysk8hori/delta-typescript-graph-action@v0.2.1-alpha-0
+        uses: ./
         with:
           access-token: ${{ secrets.GITHUB_TOKEN }}
-          tsconfig-root: './src'
-          max-size: 3
+          tsconfig-root: './'
+          max-size: 50
           orientation: LR
           debug: true
           in-details: true
-          exclude: 'node_modules, test'
+          exclude: 'test'
           include-index-file-dependencies: true
+          comment-title: 'Delta TSG with params'
+          show-metrics: true

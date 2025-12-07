@@ -1,0 +1,47 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "ignoreDeps": ["ysk8hori/delta-typescript-graph-action"],
+  "automerge": true,
+  "baseBranches": ["main"],
+  "timezone": "Asia/Tokyo",
+  "schedule": ["after 5pm and before 10pm on Thursday"],
+  "minimumReleaseAge": "7 days",
+  "rangeStrategy": "pin",
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["major", "minor"],
+      "labels": ["TypeScript"],
+      "matchPackageNames": ["typescript"],
+      "groupName": "TypeScript"
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["packageManager"],
+      "matchPackageNames": ["pnpm"],
+      "enabled": true,
+      "groupName": "pnpm"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "pinDigests": true,
+      "minimumReleaseAge": "1 week"
+    },
+    {
+      "groupName": "ESLint related packages",
+      "packageNames": ["eslint", "eslint-config-prettier"],
+      "packagePatterns": ["^@typescript-eslint/", "^eslint-plugin"]
+    },
+    {
+      "groupName": "All minor and patch dependencies",
+      "matchUpdateTypes": ["minor", "patch"],
+      "labels": ["UPDATE-MINOR&PATCH"],
+      "excludePackageNames": ["typescript", "eslint", "eslint-config-prettier"],
+      "excludePackagePatterns": ["^@typescript-eslint/", "^eslint-plugin"]
+    }
+  ],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["after 5pm and before 10pm on Thursday"]
+  }
+}

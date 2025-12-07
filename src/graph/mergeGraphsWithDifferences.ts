@@ -1,28 +1,25 @@
-import { abstraction } from '@ysk8hori/typescript-graph/dist/src/graph/abstraction';
-import { mergeGraph } from '@ysk8hori/typescript-graph/dist/src/graph/utils';
-import { Graph } from '@ysk8hori/typescript-graph/dist/src/models';
+import type { Graph } from '@ysk8hori/typescript-graph';
+import {
+  abstraction,
+  mergeGraph,
+  filterGraph,
+} from '@ysk8hori/typescript-graph';
 import { pipe } from 'remeda';
 import { log } from '../utils/log';
+import { createTsgCommand } from '../tsg/createTsgCommand';
+import type { Context } from '../utils/context';
 import addStatus from './addStatus';
 import extractAbstractionTarget from './extractAbstractionTarget';
 import extractNoAbstractionDirs from './extractNoAbstractionDirs';
 import updateRelationsStatus from './updateRelationsStatus';
-import { filterGraph } from '@ysk8hori/typescript-graph/dist/src/graph/filterGraph';
-import { exclude } from '../utils/config';
 import { extractAbstractionTargetFromGraphs } from './extractAbstractionTargetFromGraphs';
-import { createTsgCommand } from './createTsgCommand';
 import { createIncludeList } from './createIncludeList';
 
 /** ２つのグラフからその差分を反映した１つのグラフを生成する */
 export default function mergeGraphsWithDifferences(
   fullBaseGraph: Graph,
   fullHeadGraph: Graph,
-  created: string[],
-  deleted: string[],
-  modified: string[],
-  renamed:
-    | { filename: string; previous_filename: string | undefined }[]
-    | undefined,
+  context: Pick<Context, 'filesChanged' | 'config'>,
 ) {
   const { createdRelations, deletedRelations } = updateRelationsStatus(
     fullBaseGraph,
@@ -32,17 +29,11 @@ export default function mergeGraphsWithDifferences(
   log('deletedRelations:', deletedRelations);
 
   // base と head のグラフをマージする
-  const mergedGraph = mergeGraph(fullHeadGraph, fullBaseGraph);
+  const mergedGraph = mergeGraph([fullHeadGraph, fullBaseGraph]);
   log('mergedGraph.nodes.length:', mergedGraph.nodes.length);
   log('mergedGraph.relations.length:', mergedGraph.relations.length);
 
-  const includes = createIncludeList({
-    created,
-    deleted,
-    modified,
-    renamed,
-    graphs: [mergedGraph],
-  });
+  const includes = createIncludeList({ context, graphs: [mergedGraph] });
   log('includes:', includes);
 
   const abstractionTarget = pipe(includes, extractNoAbstractionDirs, dirs =>
@@ -52,7 +43,7 @@ export default function mergeGraphsWithDifferences(
 
   const graph = pipe(
     mergedGraph,
-    graph => filterGraph(includes, ['node_modules', ...exclude()], graph),
+    graph => filterGraph(includes, context.config.exclude, graph),
     graph => (
       log('filteredGraph.nodes.length:', graph.nodes.length),
       log('filteredGraph.relations.length:', graph.relations.length),
@@ -64,7 +55,7 @@ export default function mergeGraphsWithDifferences(
       log('abstractedGraph.relations.length:', graph.relations.length),
       graph
     ),
-    graph => addStatus({ modified, created, deleted }, graph),
+    graph => addStatus(context, graph),
     graph => (
       log('graph.nodes.length:', graph.nodes.length),
       log('graph.relations.length:', graph.relations.length),
@@ -74,8 +65,8 @@ export default function mergeGraphsWithDifferences(
 
   const tsgCommand = createTsgCommand({
     includes,
-    excludes: ['node_modules', ...exclude()],
     abstractions: extractAbstractionTargetFromGraphs(graph),
+    context,
   });
 
   return { graph, tsgCommand };
