@@ -24,7 +24,7 @@
     "@eslint/js": "9.39.2",
     "@total-typescript/ts-reset": "0.6.1",
     "@types/node": "24.10.4",
-    "@typescript-eslint/parser": "8.51.0",
+    "@typescript-eslint/parser": "8.52.0",
     "@vercel/ncc": "0.38.4",
     "eslint": "9.39.2",
     "eslint-config-prettier": "10.1.8",
@@ -33,7 +33,7 @@
     "globals": "16.5.0",
     "prettier": "3.7.4",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.51.0",
+    "typescript-eslint": "8.52.0",
     "vitest": "4.0.16",
     "zx": "8.8.5"
   },
@@ -41,6 +41,6 @@
     "@actions/core": "1.11.1",
     "@actions/github": "6.0.1",
     "@ysk8hori/typescript-graph": "0.26.5",
-    "remeda": "2.33.0"
+    "remeda": "2.33.1"
   }
 }
